@@ -3,7 +3,7 @@ set(EXECUTABLE dungeons)
 if(MSVC)
   set(CMAKE_EXE_LINKER_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 else()
-  add_compile_options(-Wall -O2 -g)
+  add_compile_options(-Wall -O0 -g)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
