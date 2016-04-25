@@ -11,6 +11,8 @@ find_package(SFML 2 COMPONENTS system window graphics REQUIRED)
 
 set(SOURCES
   main.cpp
+  delaunay.hpp delaunay.cpp
+  format.hpp format.cpp
 )
 
 add_executable(${EXECUTABLE} WIN32 MACOSX_BUNDLE ${SOURCES})

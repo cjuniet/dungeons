@@ -1,4 +1,6 @@
+#include "delaunay.hpp"
 #include <SFML/Graphics.hpp>
+#include <fstream>
 #include <random>
 
 namespace rng {
@@ -64,6 +66,7 @@ int main(int argc, char* argv[])
   float speed = 8.0f;
 
   std::vector<sf::RectangleShape> main_rooms;
+  DelaunayGraph dg(desktop.width, desktop.height);
 
   while (window.isOpen()) {
     sf::Event event;
@@ -140,12 +143,13 @@ int main(int argc, char* argv[])
       }
       filtered = true;
     } else if (!done) {
-      // TODO: delaunay goes here
+      for (auto& room : main_rooms) dg.add_vertex({room.getPosition().x, room.getPosition().y});
       done = true;
     }
 
     window.clear();
     for (auto& room : rooms) window.draw(room);
+    if (done) window.draw(dg);
     window.display();
   }
 
