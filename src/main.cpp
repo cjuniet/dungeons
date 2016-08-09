@@ -17,7 +17,7 @@ constexpr int fast_floor(const float x) { return x > 0 ? (int)x : (int)x - 1; }
 sf::Vector2f align(const sf::Vector2f& v, const float step = 8.0f)
 {
   // return sf::Vector2f(fast_floor((v.x + step - 1) / step) * step, fast_floor((v.y + step - 1) / step) * step);
-  return sf::Vector2f(std::round((v.x  + step - 1) / step) * step, std::round((v.y + step - 1) / step) * step);
+  return sf::Vector2f(std::round((v.x + step - 1) / step) * step, std::round((v.y + step - 1) / step) * step);
 }
 
 sf::Vector2f getPointInCircle(float a, float b)
@@ -52,15 +52,18 @@ int main(int argc, char* argv[])
 
   const int NB_ROOMS = 100;
   std::vector<sf::RectangleShape> rooms;
-  std::normal_distribution<> width_dist(60, 20);
-  std::normal_distribution<> height_dist(60 * ratio, 20 * ratio);
+  std::normal_distribution<> width_dist(50, 20);
+  std::normal_distribution<> height_dist(50 * ratio, 20 * ratio);
   std::uniform_int_distribution<> color_dist(0, 0xffffff);
   bool marked = false;     //
   bool all_spread = false; // TODO: FSM?
+  bool filtered = false;   //
   bool done = false;       //
   float width_mean = 0;
   float height_mean = 0;
-  float speed = 1.0f;
+  float speed = 8.0f;
+
+  std::vector<sf::RectangleShape> main_rooms;
 
   while (window.isOpen()) {
     sf::Event event;
@@ -106,17 +109,21 @@ int main(int argc, char* argv[])
         auto bounds = getAlignedBounds(lhs);
         for (auto& rhs : rooms) {
           if (&lhs == &rhs) continue;
+          float alhs = lhs.getSize().x * lhs.getSize().y;
+          float arhs = rhs.getSize().x * rhs.getSize().y;
+          float wlhs = arhs / (alhs + arhs);
+          float wrhs = alhs / (alhs + arhs);
           auto v = rhs.getPosition() - lhs.getPosition();
           v /= (1.0f + (float)sqrt(v.x * v.x + v.y * v.y));
           if (bounds.intersects(rhs.getGlobalBounds())) {
-            lhs.move(-speed * v.x, -speed * v.y);
-            rhs.move(+speed * v.x, +speed * v.y);
+            lhs.move(-speed * wlhs * v.x, -speed * wlhs * v.y);
+            rhs.move(+speed * wrhs * v.x, +speed * wrhs * v.y);
             bounds = getAlignedBounds(lhs);
             all_spread = false;
           }
         }
       }
-    } else if (!done) {
+    } else if (!filtered) {
       width_mean *= 1.1f;
       height_mean *= 1.1f;
       sf::Color grey(0x808080ff);
@@ -126,10 +133,14 @@ int main(int argc, char* argv[])
         room.setOutlineColor(grey);
         if (room.getSize().x >= width_mean && room.getSize().y >= height_mean) {
           room.setFillColor(sf::Color::Red);
+          main_rooms.push_back(room);
         } else {
           room.setFillColor(navy);
         }
       }
+      filtered = true;
+    } else if (!done) {
+      // TODO: delaunay goes here
       done = true;
     }
 
